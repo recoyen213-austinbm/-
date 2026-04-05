@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>探索者學院 Explorer Academy</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Noto+Serif+TC:wght@400;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+–ink:    #0D0D0D;
+–parch:  #F5F0E8;
+–gold:   #C9952A;
+–gold2:  #E8B84B;
+–rust:   #8B3A1A;
+–forest: #1A3A2A;
+–sky:    #1C3D5A;
+–cream:  #FBF7EF;
+–mist:   #E8E0D0;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+font-family: ‘Noto Serif TC’, serif;
+background: var(–ink);
+color: var(–parch);
+overflow-x: hidden;
+}
+
+/* ── Grain texture overlay ── */
+body::before {
+content:’’;
+position: fixed; inset:0; z-index:999; pointer-events:none;
+background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘noise’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23noise)’ opacity=‘0.04’/%3E%3C/svg%3E”);
+opacity: 0.35;
+}
+
+/* ── Stars background ── */
+.starfield {
+position: fixed; inset:0; z-index:0; overflow:hidden;
+background: radial-gradient(ellipse at 50% 0%, #1a2840 0%, #080808 60%);
+}
+.star {
+position:absolute; border-radius:50%; background:white;
+animation: twinkle ease-in-out infinite;
+}
+@keyframes twinkle {
+0%,100%{opacity:0.15;transform:scale(1)}
+50%{opacity:0.9;transform:scale(1.3)}
+}
+
+/* ── Hero ── */
+.hero {
+position: relative; z-index:10;
+min-height: 100vh;
+display: flex; flex-direction:column;
+align-items: center; justify-content: center;
+padding: 60px 24px;
+text-align: center;
+}
+
+.compass-ring {
+width: 120px; height: 120px;
+border: 2px solid var(–gold);
+border-radius: 50%;
+display: flex; align-items:center; justify-content:center;
+position: relative;
+margin: 0 auto 32px;
+animation: spinSlow 30s linear infinite;
+}
+.compass-ring::before {
+content:’’;
+position:absolute; inset:-8px;
+border: 1px solid rgba(201,149,42,0.3);
+border-radius:50%;
+}
+.compass-ring::after {
+content:‘✦ ✦ ✦ ✦’;
+position:absolute;
+font-size: 0.5rem; letter-spacing:18px;
+color: var(–gold); opacity:0.6;
+}
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+.compass-inner {
+font-size: 2.5rem; animation: spinSlow 30s linear infinite reverse;
+}
+
+.eyebrow {
+font-family: ‘DM Mono’, monospace;
+font-size: 0.72rem; letter-spacing: 5px;
+color: var(–gold); text-transform: uppercase;
+margin-bottom: 20px;
+opacity: 0;
+animation: fadeUp 0.8s ease 0.3s both;
+}
+
+h1.hero-title {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: clamp(3.5rem, 10vw, 7.5rem);
+font-weight: 700;
+line-height: 0.95;
+letter-spacing: -1px;
+color: var(–parch);
+margin-bottom: 12px;
+opacity: 0;
+animation: fadeUp 0.9s ease 0.5s both;
+}
+h1.hero-title em {
+font-style: italic;
+color: var(–gold);
+display: block;
+}
+
+.hero-en {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: clamp(1rem, 3vw, 1.6rem);
+font-weight: 400;
+letter-spacing: 8px;
+color: rgba(245,240,232,0.5);
+margin-bottom: 48px;
+opacity: 0;
+animation: fadeUp 0.9s ease 0.7s both;
+}
+
+.hero-divider {
+width: 80px; height: 1px;
+background: linear-gradient(90deg, transparent, var(–gold), transparent);
+margin: 0 auto 48px;
+opacity: 0;
+animation: fadeUp 0.9s ease 0.8s both;
+}
+
+.hero-tagline {
+font-size: clamp(1rem, 2.5vw, 1.25rem);
+line-height: 1.9;
+color: rgba(245,240,232,0.75);
+max-width: 560px;
+margin: 0 auto 60px;
+opacity: 0;
+animation: fadeUp 1s ease 1s both;
+}
+
+.scroll-hint {
+font-family: ‘DM Mono’, monospace;
+font-size: 0.65rem; letter-spacing: 3px;
+color: rgba(201,149,42,0.5);
+display: flex; flex-direction:column; align-items:center; gap:8px;
+opacity: 0;
+animation: fadeUp 1s ease 1.4s both;
+}
+.scroll-line {
+width: 1px; height: 48px;
+background: linear-gradient(to bottom, var(–gold), transparent);
+animation: scrollPulse 2s ease-in-out infinite;
+}
+@keyframes scrollPulse { 0%,100%{opacity:0.3;transform:scaleY(0.8)} 50%{opacity:1;transform:scaleY(1)} }
+
+/* ── Section base ── */
+section {
+position: relative; z-index:10;
+padding: 100px 24px;
+}
+
+.container { max-width: 860px; margin: 0 auto; }
+.container-wide { max-width: 1100px; margin: 0 auto; }
+
+/* ── Story section ── */
+.story-section {
+background: var(–cream);
+color: var(–ink);
+}
+
+.section-label {
+font-family: ‘DM Mono’, monospace;
+font-size: 0.68rem; letter-spacing: 4px;
+color: var(–gold);
+text-transform: uppercase;
+margin-bottom: 24px;
+display: flex; align-items:center; gap:12px;
+}
+.section-label::after {
+content:’’; flex:1; height:1px;
+background: linear-gradient(90deg, var(–gold), transparent);
+max-width: 120px;
+}
+
+.story-pull {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: clamp(1.8rem, 4vw, 2.8rem);
+font-weight: 600;
+line-height: 1.3;
+color: var(–ink);
+margin-bottom: 40px;
+}
+.story-pull em { font-style:italic; color: var(–rust); }
+
+.story-body {
+font-size: clamp(0.95rem, 1.8vw, 1.1rem);
+line-height: 2.1;
+color: #2a2a2a;
+margin-bottom: 28px;
+}
+.story-body + .story-body { margin-top: 0; }
+
+.story-highlight {
+border-left: 3px solid var(–gold);
+padding: 20px 28px;
+margin: 40px 0;
+background: rgba(201,149,42,0.06);
+}
+.story-highlight p {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+font-style: italic;
+line-height: 1.7;
+color: var(–ink);
+}
+
+/* ── Dark interlude ── */
+.dark-section {
+background: #0a0a0a;
+color: var(–parch);
+position: relative; overflow:hidden;
+}
+.dark-section::before {
+content:’’;
+position:absolute; inset:0;
+background: radial-gradient(ellipse at 30% 50%, rgba(139,58,26,0.15) 0%, transparent 60%),
+radial-gradient(ellipse at 70% 50%, rgba(28,61,90,0.2) 0%, transparent 60%);
+}
+
+.three-cols {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+gap: 2px;
+margin-top: 60px;
+}
+.col-card {
+padding: 48px 36px;
+background: rgba(245,240,232,0.03);
+border: 1px solid rgba(201,149,42,0.12);
+position: relative;
+transition: background 0.4s;
+}
+.col-card:hover { background: rgba(201,149,42,0.06); }
+.col-card .card-num {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 4rem; font-weight:700;
+color: rgba(201,149,42,0.2);
+line-height:1;
+margin-bottom: 16px;
+}
+.col-card h3 {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.5rem; font-weight:600;
+color: var(–gold2);
+margin-bottom: 16px;
+}
+.col-card p {
+font-size: 0.9rem; line-height:1.9;
+color: rgba(245,240,232,0.65);
+}
+
+/* ── The three pillars ── */
+.pillars-section {
+background: var(–forest);
+color: var(–parch);
+position: relative; overflow:hidden;
+}
+.pillars-section::before {
+content:’’;
+position:absolute; bottom:0; left:0; right:0; height:40%;
+background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
+}
+
+.pillar-grid {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+gap: 32px;
+margin-top: 60px;
+position: relative; z-index:2;
+}
+.pillar {
+text-align: center;
+padding: 40px 24px;
+border: 1px solid rgba(245,240,232,0.1);
+border-radius: 2px;
+background: rgba(245,240,232,0.04);
+transition: transform 0.3s, background 0.3s;
+cursor: default;
+}
+.pillar:hover {
+transform: translateY(-6px);
+background: rgba(245,240,232,0.08);
+}
+.pillar-icon {
+font-size: 2.4rem; margin-bottom: 20px;
+display: block;
+}
+.pillar h3 {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 1.4rem; font-weight:600;
+color: var(–gold2);
+margin-bottom: 8px;
+}
+.pillar .pillar-en {
+font-family: ‘DM Mono’, monospace;
+font-size: 0.65rem; letter-spacing:3px;
+color: rgba(201,149,42,0.5);
+margin-bottom: 16px;
+display: block;
+}
+.pillar p {
+font-size: 0.88rem; line-height:1.9;
+color: rgba(245,240,232,0.65);
+}
+
+/* ── Letter section ── */
+.letter-section {
+background: #f8f3ea;
+color: var(–ink);
+}
+.letter-paper {
+background: white;
+padding: 60px 64px;
+max-width: 680px;
+margin: 0 auto;
+box-shadow: 0 24px 80px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06);
+position: relative;
+}
+.letter-paper::before {
+content:’’;
+position:absolute; top:0; left:0; right:0; height:4px;
+background: linear-gradient(90deg, var(–rust), var(–gold), var(–forest));
+}
+.letter-date {
+font-family: ‘DM Mono’, monospace;
+font-size: 0.72rem; color:#999; letter-spacing:2px;
+margin-bottom: 32px;
+}
+.letter-body {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: clamp(1.05rem, 2vw, 1.2rem);
+line-height: 2;
+color: #1a1a1a;
+}
+.letter-body p { margin-bottom: 20px; }
+.letter-sig {
+margin-top: 40px;
+font-family: ‘Cormorant Garamond’, serif;
+font-style: italic;
+font-size: 1.1rem;
+color: #444;
+}
+.letter-sig strong {
+display: block; margin-top: 8px;
+font-style: normal; font-size: 0.85rem;
+color: #888; letter-spacing:1px;
+}
+
+/* ── Week map ── */
+.map-section {
+background: var(–sky);
+color: var(–parch);
+position: relative; overflow:hidden;
+}
+.map-section::after {
+content:’’;
+position:absolute; inset:0;
+background: radial-gradient(ellipse at 50% 100%, rgba(201,149,42,0.08) 0%, transparent 60%);
+}
+
+.week-path {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 0;
+margin-top: 60px;
+position: relative; z-index:2;
+}
+.week-path::before {
+content:’’;
+position:absolute; top:36px; left:10%; right:10%;
+height: 1px;
+background: linear-gradient(90deg, transparent, rgba(201,149,42,0.4), rgba(201,149,42,0.4), transparent);
+}
+.week-stop {
+text-align:center; padding: 0 12px 40px;
+position:relative;
+}
+.week-dot {
+width: 14px; height:14px; border-radius:50%;
+background: var(–gold);
+margin: 0 auto 16px;
+border: 3px solid var(–sky);
+box-shadow: 0 0 0 2px var(–gold);
+position:relative; z-index:1;
+}
+.week-dot.big {
+width:20px; height:20px;
+box-shadow: 0 0 0 3px var(–gold), 0 0 16px rgba(201,149,42,0.4);
+}
+.week-num {
+font-family: ‘DM Mono’, monospace;
+font-size: 0.6rem; letter-spacing:2px;
+color: rgba(201,149,42,0.6);
+margin-bottom: 4px;
+}
+.week-name {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: 0.95rem; font-weight:600;
+color: var(–parch);
+margin-bottom: 4px;
+}
+.week-type {
+font-size: 0.72rem;
+color: rgba(245,240,232,0.4);
+}
+@media(max-width:600px){
+.week-path { grid-template-columns: repeat(2,1fr); }
+.week-path::before { display:none; }
+}
+
+/* ── Final CTA ── */
+.cta-section {
+background: var(–ink);
+text-align: center;
+padding: 120px 24px;
+position: relative; overflow:hidden;
+}
+.cta-section::before {
+content:’’;
+position:absolute; inset:0;
+background: radial-gradient(ellipse at 50% 50%, rgba(201,149,42,0.08) 0%, transparent 60%);
+}
+.cta-section h2 {
+font-family: ‘Cormorant Garamond’, serif;
+font-size: clamp(2.5rem, 6vw, 5rem);
+font-weight:700; line-height:1.1;
+color: var(–parch);
+margin-bottom: 24px;
+position: relative; z-index:1;
+}
+.cta-section h2 em { color: var(–gold); font-style:italic; }
+.cta-section p {
+font-size: 1.05rem; line-height:1.9;
+color: rgba(245,240,232,0.6);
+max-width: 500px; margin: 0 auto 48px;
+position: relative; z-index:1;
+}
+.cta-badge {
+display: inline-flex; align-items:center; gap:12px;
+border: 1px solid rgba(201,149,42,0.4);
+padding: 16px 36px;
+font-family: ‘DM Mono’, monospace;
+font-size: 0.8rem; letter-spacing:3px;
+color: var(–gold2);
+position: relative; z-index:1;
+transition: background 0.3s;
+cursor: default;
+}
+.cta-badge:hover { background: rgba(201,149,42,0.08); }
+
+/* ── Animations ── */
+@keyframes fadeUp {
+from { opacity:0; transform:translateY(30px); }
+to   { opacity:1; transform:translateY(0); }
+}
+
+.reveal {
+opacity:0; transform:translateY(28px);
+transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible {
+opacity:1; transform:translateY(0);
+}
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+@media(max-width:600px){
+.letter-paper { padding: 40px 28px; }
+.three-cols { grid-template-columns:1fr; gap:0; }
+section { padding: 72px 20px; }
+}
+</style>
+
+</head>
+<body>
+
+<!-- Stars -->
+
+<div class="starfield" id="starfield"></div>
+
+<!-- ── HERO ── -->
+
+<section class="hero">
+  <div class="compass-ring"><span class="compass-inner">✦</span></div>
+  <p class="eyebrow">奧斯汀美語 桃園北門分校 × 2026 夏令營</p>
+  <h1 class="hero-title">
+    探索者<em>學院</em>
+  </h1>
+  <p class="hero-en">Explorer Academy</p>
+  <div class="hero-divider"></div>
+  <p class="hero-tagline">
+    英語只是起點，<br>
+    這是一個孩子學會<strong style="color:var(--gold2)">成為自己</strong>的地方。
+  </p>
+  <div class="scroll-hint">
+    <span>SCROLL</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ── STORY ── -->
+
+<section class="story-section">
+  <div class="container">
+    <div class="section-label reveal">關於我們的故事</div>
+
+```
+<p class="story-pull reveal reveal-delay-1">
+  世界變了。<br>
+  <em>我們的孩子，準備好了嗎？</em>
+</p>
+
+<p class="story-body reveal reveal-delay-2">
+  2030年，今天入學的孩子將要面對的工作，有65%現在還不存在。這不是危言聳聽，這是牛津大學的研究數據。AI 會處理訊息，機器會執行指令，但有一件事，只有人類能做——
+</p>
+
+<div class="story-highlight reveal reveal-delay-2">
+  <p>「在充滿不確定的世界裡，<br>看見可能性、連結他人、創造意義。」</p>
+</div>
+
+<p class="story-body reveal reveal-delay-3">
+  探索者學院從這個問題出發：<strong>如果我們只有八週，我們能給孩子什麼，是他們帶得走、用一輩子的？</strong>
+</p>
+
+<p class="story-body reveal reveal-delay-3">
+  不是單字量。不是文法分數。不是一張証書。<br>
+  而是一種<strong>思維方式</strong>、一種<strong>與人相處的能力</strong>、還有一個深深刻在心裡的信念——
+  <em>「我可以面對任何挑戰。」</em>
+</p>
+```
+
+  </div>
+</section>
+
+<!-- ── WHY DIFFERENT ── -->
+
+<section class="dark-section">
+  <div class="container-wide">
+    <div class="section-label reveal" style="color:var(--gold)">為什麼我們不一樣</div>
+    <p class="story-pull reveal reveal-delay-1" style="color:var(--parch); font-family:'Cormorant Garamond',serif; font-size:clamp(1.6rem,3.5vw,2.5rem); max-width:700px;">
+      大多數暑期課程教孩子<em style="color:var(--gold2)">知道什麼</em>。<br>
+      我們教孩子<em style="color:var(--gold2)">成為什麼</em>。
+    </p>
+
+```
+<div class="three-cols">
+  <div class="col-card reveal reveal-delay-1">
+    <div class="card-num">01</div>
+    <h3>英語是載具，不是目的地</h3>
+    <p>我們用雙語環境包裹每一個挑戰——解謎、談判、協作、表達。孩子在真實情境中使用英語，不是為了考試，而是因為有話要說、有事要做。語言能力在不知不覺中，成為了本能。</p>
+  </div>
+  <div class="col-card reveal reveal-delay-2">
+    <div class="card-num">02</div>
+    <h3>每堂課都有一個「峰值時刻」</h3>
+    <p>諾貝爾獎心理學家告訴我們：人記住的不是平均，而是高峰與結尾。我們刻意設計每一堂課的高峰體驗。而第八週的最後一堂——燈光儀式入場、傳奇石宣誓、老師唸出每人專屬稱號、時光膠囊——是整個夏天最高的那個峰值，孩子帶著「我真的做到了」的感覺離開。</p>
+  </div>
+  <div class="col-card reveal reveal-delay-3">
+    <div class="card-num">03</div>
+    <h3>七個習慣，不是口號</h3>
+    <p>我們把《與成功有約》的七個習慣，拆解成孩子能體驗的遊戲、角色扮演、真實衝突的解決。不是上課學，是活出來。孩子離開時帶走的，是一套面對世界的工具。</p>
+  </div>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- ── THREE PILLARS ── -->
+
+<section class="pillars-section">
+  <div class="container-wide">
+    <div class="section-label reveal" style="color:var(--gold)">探索者學院三大核心</div>
+    <p class="story-pull reveal reveal-delay-1" style="color:var(--parch); font-family:'Cormorant Garamond',serif; font-size:clamp(1.6rem,3.5vw,2.5rem); max-width:700px;">
+      八週，三條線，<em style="color:var(--gold2)">交織成一個完整的孩子。</em>
+    </p>
+
+```
+<div class="pillar-grid">
+  <div class="pillar reveal reveal-delay-1">
+    <span class="pillar-icon">🌍</span>
+    <h3>雙語力</h3>
+    <span class="pillar-en">BILINGUAL POWER</span>
+    <p>不只是會說英語，而是能用英語思考、感受、說服、連結。我們用沉浸式情境，讓英語成為孩子表達自己的自然語言。</p>
+  </div>
+  <div class="pillar reveal reveal-delay-2">
+    <span class="pillar-icon">🧭</span>
+    <h3>內在羅盤</h3>
+    <span class="pillar-en">INNER COMPASS</span>
+    <p>七個習慣是每個探索者的導航系統。主動積極、以終為始、雙贏思維——這些不是大道理，是每一天可以選擇的行動。</p>
+  </div>
+  <div class="pillar reveal reveal-delay-3">
+    <span class="pillar-icon">🎨</span>
+    <h3>創造者精神</h3>
+    <span class="pillar-en">MAKER MINDSET</span>
+    <p>才藝不是表演，是思維。無論是偵探的推理、科學家的實驗、藝術家的創作，我們培養的是「看見問題、動手解決」的基因。</p>
+  </div>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- ── LETTER ── -->
+
+<section class="letter-section">
+  <div class="container">
+    <div class="section-label reveal">一封信</div>
+    <div class="letter-paper reveal reveal-delay-1">
+      <div class="letter-date">寫給每一位考慮報名的家長</div>
+      <div class="letter-body">
+        <p>親愛的爸爸媽媽，</p>
+        <p>
+          我理解你的猶豫。暑假很寶貴，孩子的時間更寶貴。你不想讓他去一個地方只是坐著、聽著、然後忘掉。
+        </p>
+        <p>
+          我也是這樣想的。所以我們花了很長時間，重新問自己這個問題：<strong>八週能讓一個孩子發生什麼真正的改變？</strong>
+        </p>
+        <p>
+          我們找到的答案，不是更多的單字、更難的文法。而是讓孩子真實地體驗——在壓力下做決定、在衝突中找雙贏、在陌生語言裡表達自己的想法、在最後一天對著全班大聲說出：「我做到了我以為自己做不到的事。」
+        </p>
+        <p>
+          這個瞬間，才是我們最想給你孩子的東西。
+        </p>
+        <p>
+          我們叫它探索者學院，因為每個孩子都是探索者。他們探索語言、探索習慣、探索自己的邊界。而我們，只是那個相信他們、並且陪他們走過這段旅程的人。
+        </p>
+      </div>
+      <div class="letter-sig">
+        帶著真誠，
+        <strong>奧斯汀美語 桃園北門分校 教學團隊</strong>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── WEEK MAP ── -->
+
+<section class="map-section">
+  <div class="container-wide">
+    <div class="section-label reveal" style="color:var(--gold)">八週旅程地圖</div>
+    <p class="story-pull reveal reveal-delay-1" style="color:var(--parch); font-family:'Cormorant Garamond',serif; font-size:clamp(1.4rem,3vw,2rem); max-width:700px;">
+      每一週都是一個新的關卡，<em style="color:var(--gold2)">每一堂都有一個峰值時刻。</em>
+    </p>
+
+```
+<div class="week-path reveal reveal-delay-2">
+  <div class="week-stop">
+    <div class="week-dot"></div>
+    <div class="week-num">WEEK 1</div>
+    <div class="week-name">🔍 線索啟動</div>
+    <div class="week-type">偵探營</div>
+  </div>
+  <div class="week-stop">
+    <div class="week-dot"></div>
+    <div class="week-num">WEEK 2</div>
+    <div class="week-name">🌏 世界接軌</div>
+    <div class="week-type">雙語營</div>
+  </div>
+  <div class="week-stop">
+    <div class="week-dot"></div>
+    <div class="week-num">WEEK 3</div>
+    <div class="week-name">🔬 實驗解密</div>
+    <div class="week-type">科學營</div>
+  </div>
+  <div class="week-stop">
+    <div class="week-dot big"></div>
+    <div class="week-num">WEEK 4</div>
+    <div class="week-name">🦸 發現自己</div>
+    <div class="week-type">7個習慣</div>
+  </div>
+  <div class="week-stop">
+    <div class="week-dot"></div>
+    <div class="week-num">WEEK 5</div>
+    <div class="week-name">🕵️ 跨國行動</div>
+    <div class="week-type">雙語營</div>
+  </div>
+  <div class="week-stop">
+    <div class="week-dot"></div>
+    <div class="week-num">WEEK 6</div>
+    <div class="week-name">🎨 留下印記</div>
+    <div class="week-type">創意美術</div>
+  </div>
+  <div class="week-stop">
+    <div class="week-dot big"></div>
+    <div class="week-num">WEEK 7</div>
+    <div class="week-name">🤝 並肩作戰</div>
+    <div class="week-type">7個習慣</div>
+  </div>
+  <div class="week-stop">
+    <div class="week-dot big" style="background:var(--gold2); box-shadow: 0 0 0 3px var(--gold2), 0 0 24px rgba(232,184,75,0.6);"></div>
+    <div class="week-num">WEEK 8</div>
+    <div class="week-name" style="color:var(--gold2);">✦ 最終試煉</div>
+    <div class="week-type">雙語營 ✦ 結業</div>
+  </div>
+</div>
+```
+
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+
+<section class="cta-section">
+  <h2 class="reveal">你的孩子，<br><em>天生就是探索者。</em></h2>
+  <p class="reveal reveal-delay-1">
+    他只需要一個地方，讓他知道這件事。<br>
+    今年夏天，就是那個地方。
+  </p>
+  <div class="cta-badge reveal reveal-delay-2">
+    ✦ &nbsp; 探索者學院 &nbsp; 奧斯汀美語桃園北門 &nbsp; 2026 夏令營 &nbsp; ✦
+  </div>
+</section>
+
+<script>
+// ── Generate stars ──
+const sf = document.getElementById('starfield');
+for(let i=0;i<120;i++){
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = Math.random()*2+0.5;
+  s.style.cssText = `
+    width:${sz}px; height:${sz}px;
+    left:${Math.random()*100}%;
+    top:${Math.random()*100}%;
+    animation-duration:${2+Math.random()*4}s;
+    animation-delay:${Math.random()*5}s;
+  `;
+  sf.appendChild(s);
+}
+
+// ── Scroll reveal ──
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting) {
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
